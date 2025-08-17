@@ -1,0 +1,662 @@
+import express from 'express';
+import { body, param, validationResult } from 'express-validator';
+import Constituency from '../models/constituency.js';
+import { getConstituencyByAreaName, getAllConstituencyNames } from '../utils/constituencyData.js';
+
+const router = express.Router();
+
+// Validation middleware
+const validateAreaName = [
+  param('area_name')
+    .trim()
+    .notEmpty()
+    .withMessage('Area name is required')
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Area name must be between 1 and 100 characters')
+    .escape()
+];
+
+// Error handling middleware
+const handleValidationErrors = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      error: 'Validation failed',
+      details: errors.array()
+    });
+  }
+  next();
+};
+
+/**
+ * @swagger
+ * /api/constituencies:
+ *   get:
+ *     summary: Get all constituency area names
+ *     description: Returns a list of all constituency area names for dropdown selection
+ *     tags: [Constituencies]
+ *     responses:
+ *       200:
+ *         description: List of constituencies retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   area_name:
+ *                     type: string
+ *                     example: "Raghopur Vidhan Sabha Kshetra"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get('/', async (req, res) => {
+  try {
+    // First try to get from database
+    let constituencies = await Constituency.getAllAreaNames();
+
+    res.status(200).json(constituencies);
+  } catch (error) {
+    console.error('Error fetching constituencies:', error);
+    // Fallback to sample data
+
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to fetch constituencies'
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/constituencies/{area_name}:
+ *   get:
+ *     summary: Get constituency details by area name
+ *     description: Returns complete information for a specific constituency including representative details, departments, and candidates
+ *     tags: [Constituencies]
+ *     parameters:
+ *       - in: path
+ *         name: area_name
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: URL-encoded constituency name
+ *         example: "Raghopur%20Vidhan%20Sabha%20Kshetra"
+ *     responses:
+ *       200:
+ *         description: Constituency details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Constituency'
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Constituency not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get('/:area_name', validateAreaName, handleValidationErrors, async (req, res) => {
+  try {
+    const { area_name } = req.params;
+
+    // Decode URL-encoded area name
+    const decodedAreaName = decodeURIComponent(area_name);
+
+    // First try to get from database
+    let constituency;
+    try {
+      constituency = await Constituency.findByAreaName(decodedAreaName);
+    }
+    catch (err) {
+      return res.status(404).json({
+        error: 'Constituency not found',
+        message: `No constituency found with area name: ${decodedAreaName}`,
+        requested_area: decodedAreaName
+      });
+    }
+
+    if (!constituency) {
+      return res.status(404).json({
+        error: 'Constituency not found',
+        message: `No constituency found with area name: ${decodedAreaName}`,
+        requested_area: decodedAreaName
+      });
+    }
+
+    res.status(200).json({
+      area_name: constituency.area_name,
+      vidhayak_info: constituency.vidhayak_info,
+      dept_info: constituency.dept_info,
+      other_candidates: constituency.other_candidates
+    });
+  } catch (error) {
+    console.error('Error fetching constituency:', error);
+
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to fetch constituency details'
+    });
+  }
+});
+
+
+/**
+ * @swagger
+ * /api/constituencies/list/paginated:
+ *   get:
+ *     summary: Get all constituencies with pagination
+ *     description: Returns all constituencies with pagination support, 2 results per page
+ *     tags: [Constituencies]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *           minimum: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 2
+ *           minimum: 1
+ *           maximum: 10
+ *         description: Number of constituencies per page
+ *     responses:
+ *       200:
+ *         description: Constituencies retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 constituencies:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Constituency'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     currentPage:
+ *                       type: integer
+ *                       example: 1
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 2
+ *                     totalConstituencies:
+ *                       type: integer
+ *                       example: 4
+ *                     hasNextPage:
+ *                       type: boolean
+ *                       example: true
+ *                     hasPrevPage:
+ *                       type: boolean
+ *                       example: false
+ *                     nextPage:
+ *                       type: integer
+ *                       example: 2
+ *                     prevPage:
+ *                       type: integer
+ *                       example: null
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get('/list/paginated', async (req, res) => {
+  try {
+    // Get pagination parameters from query
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 2;
+    
+    // Validate pagination parameters
+    if (page < 1) {
+      return res.status(400).json({
+        error: 'Invalid page number',
+        message: 'Page number must be greater than 0'
+      });
+    }
+    
+    if (limit < 1 || limit > 10) {
+      return res.status(400).json({
+        error: 'Invalid limit',
+        message: 'Limit must be between 1 and 10'
+      });
+    }
+
+    // Calculate skip value for pagination
+    const skip = (page - 1) * limit;
+
+    // Get total count of constituencies
+    const totalConstituencies = await Constituency.countDocuments({});
+    
+    // If no constituencies found, return empty result
+    if (totalConstituencies === 0) {
+      return res.status(200).json({
+        constituencies: [],
+        pagination: {
+          currentPage: page,
+          totalPages: 0,
+          totalConstituencies: 0,
+          hasNextPage: false,
+          hasPrevPage: false,
+          nextPage: null,
+          prevPage: null
+        }
+      });
+    }
+
+    // Calculate total pages
+    const totalPages = Math.ceil(totalConstituencies / limit);
+
+    // Check if requested page is valid
+    if (page > totalPages) {
+      return res.status(400).json({
+        error: 'Page out of range',
+        message: `Page ${page} does not exist. Total pages: ${totalPages}`
+      });
+    }
+
+    // Fetch constituencies with pagination
+    const constituencies = await Constituency.find({})
+      .skip(skip)
+      .limit(limit)
+      .sort({ area_name: 1 }); // Sort alphabetically by area name
+
+    // Calculate pagination metadata
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+    const nextPage = hasNextPage ? page + 1 : null;
+    const prevPage = hasPrevPage ? page - 1 : null;
+
+    // Prepare response
+    const response = {
+      constituencies: constituencies,
+      pagination: {
+        currentPage: page,
+        totalPages: totalPages,
+        totalConstituencies: totalConstituencies,
+        hasNextPage: hasNextPage,
+        hasPrevPage: hasPrevPage,
+        nextPage: nextPage,
+        prevPage: prevPage,
+        limit: limit
+      }
+    };
+
+    res.status(200).json(response);
+    
+  } catch (error) {
+    console.error('Error fetching all constituencies:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to fetch all constituencies'
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/constituencies/poll/{area_name}:
+ *   post:
+ *     summary: Submit poll response for constituency
+ *     description: Submit poll response for either vidhayak survey or department survey
+ *     tags: [Polls]
+ *     parameters:
+ *       - in: path
+ *         name: area_name
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Constituency area name
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - poll_response
+ *               - poll_category
+ *               - question_id
+ *             properties:
+ *               poll_response:
+ *                 type: string
+ *                 enum: ["yes", "no"]
+ *                 description: User's poll response
+ *               poll_category:
+ *                 type: string
+ *                 enum: ["vidhayak", "department"]
+ *                 description: Category of the poll
+ *               question_id:
+ *                 type: string
+ *                 description: ID of the question being answered
+ *               dept_id:
+ *                 type: string
+ *                 description: Department ID (required only for department polls)
+ *     responses:
+ *       200:
+ *         description: Poll response recorded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Poll response recorded successfully"
+ *                 updated_scores:
+ *                   type: object
+ *                   properties:
+ *                     yes_votes:
+ *                       type: number
+ *                     no_votes:
+ *                       type: number
+ *                     score:
+ *                       type: number
+ *       400:
+ *         description: Invalid request parameters
+ *       404:
+ *         description: Constituency or department not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/poll/:area_name', async (req, res) => {
+  try {
+    const { area_name } = req.params;
+    const { poll_response, poll_category, question_id, dept_id } = req.body;
+    console.log("poll_response", poll_response, "poll_category", poll_category, "question_id", question_id, "dept_id", dept_id);
+
+    
+    
+
+    // Find the constituency
+    const constituency = await Constituency.findOne({ area_name: area_name });
+
+    if (!constituency) {
+      return res.status(404).json({ 
+        error: 'Constituency not found',
+        message: `No constituency found with area name: ${area_name}`
+      });
+    }
+
+    let updatedScores = {};
+
+    // Handle poll response based on category
+    switch (poll_category) {
+      case 'vidhayak':
+        // Update vidhayak survey score
+        if (!constituency.vidhayak_info.survey_score || constituency.vidhayak_info.survey_score.length === 0) {
+          return res.status(400).json({
+            error: 'No vidhayak survey questions found',
+            message: 'This constituency has no vidhayak survey questions'
+          });
+        }
+
+        // Find the question by question_id (using index for simplicity)
+        const questionIndex = parseInt(question_id);
+        if (isNaN(questionIndex) || questionIndex < 0 || questionIndex >= constituency.vidhayak_info.survey_score.length) {
+          return res.status(400).json({
+            error: 'Invalid question ID',
+            message: 'Question ID is out of range'
+          });
+        }
+
+        const vidhayakQuestion = constituency.vidhayak_info.survey_score[questionIndex];
+        
+        // Update votes
+        if (poll_response === 'yes') {
+          vidhayakQuestion.yes_votes += 1;
+        } else {
+          vidhayakQuestion.no_votes += 1;
+        }
+
+        // Recalculate score
+        const totalVotes = vidhayakQuestion.yes_votes + vidhayakQuestion.no_votes;
+        vidhayakQuestion.score = Math.round((vidhayakQuestion.yes_votes / totalVotes) * 100);
+
+        updatedScores = {
+          yes_votes: vidhayakQuestion.yes_votes,
+          no_votes: vidhayakQuestion.no_votes,
+          score: vidhayakQuestion.score
+        };
+
+        break;
+
+      case 'dept':
+        // Validate dept_id for department polls
+        if (!dept_id) {
+          return res.status(400).json({
+            error: 'Department ID required',
+            message: 'dept_id is required for department polls'
+          });
+        }
+
+        // Validate poll_response is between 1 and 5 for rating system
+        const rating = parseInt(poll_response);
+        if (isNaN(rating) || rating < 1 || rating > 5) {
+          return res.status(400).json({
+            error: 'Invalid poll response',
+            message: 'poll_response must be a number between 1 and 5 for department polls'
+          });
+        }
+
+        // Find the department
+        const department = constituency.dept_info.find(dept => dept.id === dept_id);
+        if (!department) {
+          return res.status(404).json({
+            error: 'Department not found',
+            message: `No department found with ID: ${dept_id}`
+          });
+        }
+
+        // Find the question by question_id
+        const deptQuestionIndex = parseInt(question_id);
+        if (isNaN(deptQuestionIndex) || deptQuestionIndex < 0 || deptQuestionIndex >= department.survey_score.length) {
+          return res.status(400).json({
+            error: 'Invalid question ID',
+            message: 'Question ID is out of range'
+          });
+        }
+
+        const deptQuestion = department.survey_score[deptQuestionIndex];
+
+        // Initialize ratings object if not present
+        if (!deptQuestion.ratings) {
+          deptQuestion.ratings = { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0 };
+        }
+
+        // Update ratings
+        deptQuestion.ratings[rating.toString()] += 1;
+
+        // 1. calculate the weighted average of the ratings.
+        const totalVotesDept = Object.values(deptQuestion.ratings).reduce((sum, count) => sum + count, 0);
+        const weightedSum = Object.entries(deptQuestion.ratings).reduce(
+          (sum, [star, count]) => sum + (parseInt(star) * count), 0
+        );
+        const weightedAverage = totalVotesDept > 0 ? weightedSum / totalVotesDept : 0;
+
+        // 2. calculate the average score of the department. store it in department.average_score
+        // First, update the current question's score
+        deptQuestion.score = Math.round(((weightedAverage - 1) / 4) * 100);
+        
+        // Then calculate the overall department average from all its questions
+        let deptTotalScore = 0;
+        let questionCount = 0;
+        
+        department.survey_score.forEach(question => {
+          if (question.score > 0) {
+            deptTotalScore += question.score;
+            questionCount += 1;
+          }
+        });
+        
+        // Store the department's overall average score
+        department.average_score = questionCount > 0 
+          ? Math.round(deptTotalScore / questionCount)
+          : 0;
+
+        // 3. calculate the manifesto score of the constituency = average of all department average scores. store it in constituency.vidhayak_info.manifesto_score
+        let totalDeptScores = 0;
+        let deptCount = 0;
+        
+        constituency.dept_info.forEach(dept => {
+          if (dept.average_score > 0) {
+            totalDeptScores += dept.average_score;
+            deptCount += 1;
+          }
+        });
+        
+        // Update constituency manifesto score
+        constituency.vidhayak_info.manifesto_score = deptCount > 0 
+          ? Math.round(totalDeptScores / deptCount)
+          : 0;
+
+        // 4. update the constituency with the new scores.
+        // (Already done above - deptQuestion.score, department.average_score, and constituency.vidhayak_info.manifesto_score)
+
+        // 5. save the constituency to the database.
+        // (This will be done after the switch statement with await constituency.save())
+
+        // 6. return the updated department.average_score.
+        updatedScores = {
+          ratings: deptQuestion.ratings,
+          question_score: deptQuestion.score,
+          department_average_score: department.average_score,
+          manifesto_score: constituency.vidhayak_info.manifesto_score
+        };
+
+        break;
+
+      default:
+        return res.status(400).json({
+          error: 'Invalid poll category',
+          message: 'poll_category must be either "vidhayak" or "department"'
+        });
+    }
+
+    // Save the updated constituency to database
+    await constituency.save();
+
+    res.status(200).json({
+      message: 'Poll response recorded successfully',
+      constituency: area_name,
+      poll_category: poll_category,
+      question_id: question_id,
+      poll_response: poll_response,
+      updated_scores: updatedScores
+    });
+
+  } catch (error) {
+    console.error('Error recording poll response:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to record poll response'
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/constituencies/stats/overview:
+ *   get:
+ *     summary: Get constituency statistics overview
+ *     description: Returns overview statistics of all constituencies including total count, parties, and departments
+ *     tags: [Statistics]
+ *     responses:
+ *       200:
+ *         description: Statistics retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 total_constituencies:
+ *                   type: number
+ *                   example: 4
+ *                 parties:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: ["RJD", "BJP", "Congress", "JDU"]
+ *                 total_departments:
+ *                   type: number
+ *                   example: 16
+ *                 satisfaction_average:
+ *                   type: string
+ *                   example: "68%"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get('/stats/overview', async (req, res) => {
+  try {
+    const constituencies = await Constituency.find({});
+
+    if (!constituencies || constituencies.length === 0) {
+      // Use sample data for statistics
+      const sampleData = getAllConstituencyNames();
+      const stats = {
+        total_constituencies: sampleData.length,
+        parties: ['RJD', 'BJP', 'Congress', 'JDU'],
+        total_departments: 16, // 4 constituencies × 4 departments each
+        satisfaction_average: "68%"
+      };
+      return res.json(stats);
+    }
+
+    const stats = {
+      total_constituencies: constituencies.length,
+      parties: [...new Set(constituencies.map(c => c.vidhayak_info.party_name))],
+      total_departments: constituencies.reduce((sum, c) => sum + c.dept_info.length, 0),
+      satisfaction_average: "68%"
+    };
+
+    res.json(stats);
+  } catch (error) {
+    console.error('Error fetching constituency stats:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to fetch constituency statistics'
+    });
+  }
+});
+
+// 404 handler for undefined routes
+router.use('*', (req, res) => {
+  res.status(404).json({
+    error: 'Route not found',
+    message: `The requested route ${req.originalUrl} does not exist`,
+    available_routes: [
+      'GET /api/constituencies',
+      'GET /api/constituencies/:area_name',
+      'GET /api/constituencies/stats/overview'
+    ]
+  });
+});
+
+export default router;
