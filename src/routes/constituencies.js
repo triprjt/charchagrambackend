@@ -658,6 +658,91 @@ router.get('/stats/overview', async (req, res) => {
 //API to delete a constituency data from the DB
 //API to update a constituency data in the DB
 //API to clean the DB, and populate it with sample data of all constituencies at once.
+/**
+ * @swagger
+ * /api/constituencies/admin/constituencies/delete/{id}:
+ *   delete:
+ *     summary: Delete a constituency by ID
+ *     description: Admin endpoint to permanently delete a constituency and all associated data
+ *     tags: [Admin]
+ *     security:
+ *       - adminToken: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *         description: MongoDB ObjectId of the constituency to delete
+ *         example: "64f8a1b2c3d4e5f6a7b8c9d0"
+ *     responses:
+ *       200:
+ *         description: Constituency deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Constituency deleted successfully"
+ *                 deleted_constituency:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       example: "64f8a1b2c3d4e5f6a7b8c9d0"
+ *                     area_name:
+ *                       type: string
+ *                       example: "Raghopur Vidhan Sabha Kshetra"
+ *       400:
+ *         description: Invalid ID format
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Invalid ID format"
+ *                 message:
+ *                   type: string
+ *                   example: "Constituency ID must be a valid MongoDB ObjectId"
+ *       401:
+ *         description: Unauthorized - Admin token required
+ *       404:
+ *         description: Constituency not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Constituency not found"
+ *                 message:
+ *                   type: string
+ *                   example: "No constituency found with ID: 64f8a1b2c3d4e5f6a7b8c9d0"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Internal server error"
+ *                 message:
+ *                   type: string
+ *                   example: "Failed to delete constituency"
+ *                 details:
+ *                   type: object
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ */
 router.delete('/admin/constituencies/delete/:id', async (req, res) => {
   try {
     const constituencyId = req.params.id;
@@ -714,6 +799,114 @@ router.delete('/admin/constituencies/delete/:id', async (req, res) => {
     });
   }
 });
+/**
+ * @swagger
+ * /api/constituencies/admin/constituencies/update/{id}:
+ *   put:
+ *     summary: Update existing constituency
+ *     description: Admin endpoint to update an existing constituency by ID
+ *     tags: [Admin]
+ *     security:
+ *       - adminToken: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *         description: MongoDB ObjectId of the constituency to update
+ *         example: "64f8a1b2c3d4e5f6a7b8c9d0"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Constituency'
+ *     responses:
+ *       200:
+ *         description: Constituency updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Constituency updated successfully"
+ *                 constituency:
+ *                   $ref: '#/components/schemas/Constituency'
+ *       400:
+ *         description: Validation failed or invalid ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Validation failed"
+ *                 message:
+ *                   type: string
+ *                   example: "Input data does not match required schema"
+ *                 details:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       field:
+ *                         type: string
+ *                       message:
+ *                         type: string
+ *                       received:
+ *                         type: any
+ *       401:
+ *         description: Unauthorized - Admin token required
+ *       404:
+ *         description: Constituency not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Constituency not found"
+ *                 message:
+ *                   type: string
+ *                   example: "No constituency found with ID: 64f8a1b2c3d4e5f6a7b8c9d0"
+ *       409:
+ *         description: Area name conflict
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Area name conflict"
+ *                 message:
+ *                   type: string
+ *                   example: "Constituency with area name 'Raghopur Vidhan Sabha Kshetra' already exists"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Internal server error"
+ *                 message:
+ *                   type: string
+ *                   example: "Failed to update constituency"
+ *                 details:
+ *                   type: object
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ */
 router.put('/admin/constituencies/update/:id', async (req, res) => {
   try {
     const constituencyObject = req.body;
@@ -823,6 +1016,110 @@ router.put('/admin/constituencies/update/:id', async (req, res) => {
     });
   }
 });
+/**
+ * @swagger
+ * /api/constituencies/admin/constituencies/add:
+ *   post:
+ *     summary: Add a new constituency
+ *     description: Admin endpoint to add a new constituency to the database
+ *     tags: [Admin]
+ *     security:
+ *       - adminToken: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Constituency'
+ *     responses:
+ *       201:
+ *         description: Constituency added successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Constituency added successfully"
+ *                 constituency:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       example: "64f8a1b2c3d4e5f6a7b8c9d0"
+ *                     area_name:
+ *                       type: string
+ *                       example: "Raghopur Vidhan Sabha Kshetra"
+ *                     vidhayak_info:
+ *                       type: object
+ *                     dept_count:
+ *                       type: number
+ *                       example: 4
+ *                     other_candidates_count:
+ *                       type: number
+ *                       example: 3
+ *                     latest_news_count:
+ *                       type: number
+ *                       example: 2
+ *       400:
+ *         description: Validation failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Validation failed"
+ *                 message:
+ *                   type: string
+ *                   example: "Input data does not match required schema"
+ *                 details:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       field:
+ *                         type: string
+ *                       message:
+ *                         type: string
+ *                       received:
+ *                         type: any
+ *       401:
+ *         description: Unauthorized - Admin token required
+ *       409:
+ *         description: Constituency already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Constituency already exists"
+ *                 message:
+ *                   type: string
+ *                   example: "Constituency with area name 'Raghopur Vidhan Sabha Kshetra' already exists"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Internal server error"
+ *                 message:
+ *                   type: string
+ *                   example: "Failed to add constituency"
+ *                 details:
+ *                   type: object
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ */
 router.post('/admin/constituencies/add', async (req, res) => {
   try {
     const constituencyObject = req.body;
@@ -914,6 +1211,106 @@ router.post('/admin/constituencies/add', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/constituencies/admin/constituencies/reset-populate:
+ *   post:
+ *     summary: Reset and populate database
+ *     description: Admin endpoint to reset the database and populate it with new constituency data
+ *     tags: [Admin]
+ *     security:
+ *       - adminToken: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               $ref: '#/components/schemas/Constituency'
+ *             minItems: 1
+ *             description: Array of constituency objects to populate the database with
+ *     responses:
+ *       200:
+ *         description: Database reset and populated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Successfully reset and populated the database with 6 constituencies"
+ *                 summary:
+ *                   type: object
+ *                   properties:
+ *                     total_constituencies:
+ *                       type: number
+ *                       example: 6
+ *                     deleted_constituencies:
+ *                       type: number
+ *                       example: 0
+ *                     inserted_constituencies:
+ *                       type: number
+ *                       example: 6
+ *                     constituencies:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           area_name:
+ *                             type: string
+ *                           vidhayak_info:
+ *                             type: object
+ *                           dept_info:
+ *                             type: array
+ *                           other_candidates:
+ *                             type: array
+ *                           id:
+ *                             type: string
+ *       400:
+ *         description: Validation failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Validation failed"
+ *                 message:
+ *                   type: string
+ *                   example: "Input data does not match required schema"
+ *                 details:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       field:
+ *                         type: string
+ *                       message:
+ *                         type: string
+ *                       received:
+ *                         type: any
+ *       401:
+ *         description: Unauthorized - Admin token required
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Internal server error"
+ *                 message:
+ *                   type: string
+ *                   example: "Failed to reset and populate database"
+ *                 details:
+ *                   type: object
+ *      
+ */
 router.post('/admin/constituencies/reset-populate', async (req, res) => {
   try {
     const constituencyArray = req.body;
