@@ -28,8 +28,8 @@ const clientOptions = {
   maxPoolSize: 1,
   minPoolSizelegacyUnifiedTopology: true,
   // Add more debugging
-  bufferCommands: true,           // ✅ Allow buffering
-  bufferMaxEntries: 1000,  
+  bufferCommands: false,
+  bufferMaxEntries: 0
 };
 
 async function connectDB() {
