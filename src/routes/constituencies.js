@@ -4,12 +4,12 @@ import Constituency from '../models/constituency.js';
 import { getConstituencyByAreaName, getAllConstituencyNames } from '../utils/constituencyData.js';
 import { constituencyArraySchema, constituencySchema } from '../schema/schema.js';
 import { v4 as uuidv4 } from 'uuid';
-import { authenticateAdmin } from '../middleware/adminAuth.js';
+// import { authenticateAdmin } from '../middleware/adminAuth.js';
 
 const router = express.Router();
 
 // Apply middleware to all admin routes
-router.use('/admin', authenticateAdmin);
+// router.use('/admin', authenticateAdmin);
 
 // Validation middleware
 const validateAreaName = [
