@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { uuid } from 'zod';
 
 // Define valid party names
 const VALID_PARTIES = [
@@ -86,9 +87,15 @@ const deptInfoSchema = new mongoose.Schema({
 // Other candidates schema
 const otherCandidatesSchema = new mongoose.Schema({
   id: {
-    type: Number,
+    type: String,
     required: true,
-    min: 1
+    validate: {
+      validator: function(v) {
+        // UUID validation will be handled at the application level
+        return true;
+      },
+      message: props => `${props.value} is not a valid UUID!`
+    }
   },
   candidate_name: {
     type: String,

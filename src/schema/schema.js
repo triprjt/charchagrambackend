@@ -46,7 +46,7 @@ const vidhayakInfoSchema = z.object({
 });
 
 const deptInfoSchema = z.object({
-  id: z.string().min(1, "Department ID is required"),
+  id: z.string().optional(),
   dept_name: z.string().min(1, "Department name is required"),
   work_info: z.array(z.string().min(1, "Work info item cannot be empty")).min(1, "At least one work info item is required"),
   survey_score: z.array(deptSurveyScoreSchema).min(1, "At least one survey question is required"),
@@ -54,7 +54,7 @@ const deptInfoSchema = z.object({
 });
 
 const otherCandidatesSchema = z.object({
-  id: z.number().min(1, "Candidate ID must be positive"),
+  id: z.number().optional(),
   candidate_name: z.string().min(1, "Candidate name is required"),
   candidate_image_url: z.string().url("Candidate image URL must be a valid URL"),
   candidate_party: z.enum(['BJP', 'Congress', 'AAP', 'Shiv Sena', 'NCP', 'MNS', 'Samajwadi Party', 'BSP', 'TMC', 'DMK', 'AIADMK', 'RJD', 'JDU'], {

@@ -22,6 +22,10 @@ const seedDatabase = async () => {
       dept_info: constituency.dept_info.map(dept => ({
         ...dept,
         id: uuidv4()
+      })),
+      other_candidates: constituency.other_candidates.map(candidate => ({
+        ...candidate,
+        id: uuidv4()
       }))
     }));
 

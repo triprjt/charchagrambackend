@@ -757,9 +757,9 @@ router.delete('/admin/constituencies/delete/:id', async (req, res) => {
 
     // Check if constituency exists
     const constituency = await Constituency.findById(constituencyId);
-    
+
     if (!constituency) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         error: 'Constituency not found',
         message: `No constituency found with ID: ${constituencyId}`
       });
@@ -767,10 +767,10 @@ router.delete('/admin/constituencies/delete/:id', async (req, res) => {
 
     // Delete the constituency
     await Constituency.findByIdAndDelete(constituencyId);
-    
+
     console.log(`Successfully deleted constituency: ${constituency.area_name}`);
 
-    res.status(200).json({ 
+    res.status(200).json({
       message: 'Constituency deleted successfully',
       deleted_constituency: {
         id: constituencyId,
@@ -779,7 +779,7 @@ router.delete('/admin/constituencies/delete/:id', async (req, res) => {
     });
   } catch (error) {
     console.error('Error in delete operation:', error);
-    
+
     let errorMessage = 'Failed to delete constituency';
     let errorDetails = {};
 
@@ -791,8 +791,8 @@ router.delete('/admin/constituencies/delete/:id', async (req, res) => {
       };
     }
 
-    res.status(500).json({ 
-      error: 'Internal server error', 
+    res.status(500).json({
+      error: 'Internal server error',
       message: errorMessage,
       details: errorDetails,
       timestamp: new Date().toISOString()
@@ -913,10 +913,10 @@ router.put('/admin/constituencies/update/:id', async (req, res) => {
     const constituencyId = req.params.id;
 
     // Validate the input using Zod schema
-    const validationResult = constituencySchema.safeParse([constituencyObject]);
+    const validationResult = constituencySchema.safeParse(constituencyObject);
 
     if (!validationResult.success) {
-      const errors = validationResult.error.errors.map(err => ({
+      const errors = validationResult.error.map(err => ({
         field: err.path.join('.'),
         message: err.message,
         received: err.received
@@ -929,25 +929,25 @@ router.put('/admin/constituencies/update/:id', async (req, res) => {
       });
     }
 
-    const validatedConstituency = validationResult.data[0];
+    const validatedConstituency = constituencyObject;
 
     // Check if constituency exists
     const existingConstituency = await Constituency.findById(constituencyId);
 
     if (!existingConstituency) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         error: 'Constituency not found',
         message: `No constituency found with ID: ${constituencyId}`
       });
     }
 
     // Check if area_name is being changed and if it conflicts with existing constituency
-    if (constituencyObject.area_name && 
-        constituencyObject.area_name !== existingConstituency.area_name) {
-      const conflictingConstituency = await Constituency.findOne({ 
-        area_name: constituencyObject.area_name 
+    if (constituencyObject.area_name &&
+      constituencyObject.area_name !== existingConstituency.area_name) {
+      const conflictingConstituency = await Constituency.findOne({
+        area_name: constituencyObject.area_name
       });
-      
+
       if (conflictingConstituency) {
         return res.status(409).json({
           error: 'Area name conflict',
@@ -966,10 +966,10 @@ router.put('/admin/constituencies/update/:id', async (req, res) => {
 
     // Update the constituency with the new data
     const updatedConstituency = await Constituency.findByIdAndUpdate(
-      constituencyId, 
-      constituencyObject, 
-      { 
-        new: true, 
+      constituencyId,
+      constituencyObject,
+      {
+        new: true,
         runValidators: true,
         maxTimeMS: 30000
       }
@@ -977,14 +977,14 @@ router.put('/admin/constituencies/update/:id', async (req, res) => {
 
     console.log(`Successfully updated constituency: ${updatedConstituency.area_name}`);
 
-    res.status(200).json({ 
-      message: 'Constituency updated successfully', 
-      constituency: updatedConstituency 
+    res.status(200).json({
+      message: 'Constituency updated successfully',
+      constituency: updatedConstituency
     });
 
   } catch (error) {
     console.error('Error in update operation:', error);
-    
+
     let errorMessage = 'Failed to update constituency';
     let errorDetails = {};
 
@@ -1008,8 +1008,8 @@ router.put('/admin/constituencies/update/:id', async (req, res) => {
       };
     }
 
-    res.status(500).json({ 
-      error: 'Internal server error', 
+    res.status(500).json({
+      error: 'Internal server error',
       message: errorMessage,
       details: errorDetails,
       timestamp: new Date().toISOString()
@@ -1125,10 +1125,9 @@ router.post('/admin/constituencies/add', async (req, res) => {
     const constituencyObject = req.body;
 
     // Validate the input using Zod schema
-    const validationResult = constituencySchema.safeParse([constituencyObject]);
-
+    const validationResult = constituencySchema.safeParse(constituencyObject);
     if (!validationResult.success) {
-      const errors = validationResult.error.errors.map(err => ({
+      const errors = validationResult.error.map(err => ({
         field: err.path.join('.'),
         message: err.message,
         received: err.received
@@ -1141,11 +1140,11 @@ router.post('/admin/constituencies/add', async (req, res) => {
       });
     }
 
-    const validatedConstituency = validationResult.data[0];
+    const validatedConstituency = constituencyObject;
 
     // Check if constituency with same area_name already exists
-    const existingConstituency = await Constituency.findOne({ 
-      area_name: validatedConstituency.area_name 
+    const existingConstituency = await Constituency.findOne({
+      area_name: validatedConstituency.area_name
     });
 
     if (existingConstituency) {
@@ -1161,6 +1160,10 @@ router.post('/admin/constituencies/add', async (req, res) => {
       dept_info: validatedConstituency.dept_info.map(dept => ({
         ...dept,
         id: dept.id || uuidv4()
+      })),
+      other_candidates: validatedConstituency.other_candidates.map(candidate => ({
+        ...candidate,
+        id: candidate.id || uuidv4()
       }))
     };
 
@@ -1184,7 +1187,7 @@ router.post('/admin/constituencies/add', async (req, res) => {
 
   } catch (error) {
     console.error('Error in add operation:', error);
-    
+
     let errorMessage = 'Failed to add constituency';
     let errorDetails = {};
 
@@ -1313,13 +1316,18 @@ router.post('/admin/constituencies/add', async (req, res) => {
  */
 router.post('/admin/constituencies/reset-populate', async (req, res) => {
   try {
-    const constituencyArray = req.body;
+    let constituencyArrayJavascriptObject = req.body;
 
+    // Check if the request is raw JavaScript object syntax
+    let constituencyArray = constituencyArrayJavascriptObject
+    console.log('constituencyArray ', constituencyArray)
     // Validate the input array of constituencies
     const validationResult = constituencyArraySchema.safeParse(constituencyArray);
 
+    // console.log("validationResult ", validationResult)
     if (!validationResult.success) {
-      const errors = validationResult.error.errors.map(err => ({
+      console.log("validationResult ", validationResult)
+      const errors = validationResult.error.map(err => ({
         field: err.path.join('.'),
         message: err.message,
         received: err.received
@@ -1334,7 +1342,7 @@ router.post('/admin/constituencies/reset-populate', async (req, res) => {
 
     const validatedConstituencies = validationResult.data;
 
-    console.log(`Starting database reset and populate with ${validatedConstituencies.length} constituencies...`);
+    // console.log(`Starting database reset and populate with ${validatedConstituencies.length} constituencies...`);
 
     // Step 1: Delete all existing constituencies
     console.log('Deleting existing constituencies...');
@@ -1343,18 +1351,22 @@ router.post('/admin/constituencies/reset-populate', async (req, res) => {
 
     // Step 2: Populate with new constituency data
     console.log('Populating database with new constituencies...');
-    
+
     // Process each constituency to ensure proper UUIDs for departments
     const processedConstituencies = validatedConstituencies.map(constituency => {
       // Ensure each department has a unique UUID
       const processedDeptInfo = constituency.dept_info.map(dept => ({
         ...dept,
-        id: dept.id || uuidv4() // Use existing ID or generate new one
+        id: uuidv4() // Use existing ID or generate new one
       }));
-      
+      const processedOtherCandidates = constituency.other_candidates.map(candidate => ({
+        ...candidate,
+        id: uuidv4()
+      }));
       return {
         ...constituency,
-        dept_info: processedDeptInfo
+        dept_info: processedDeptInfo,
+        other_candidates: processedOtherCandidates
       };
     });
 
