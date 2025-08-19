@@ -12,9 +12,9 @@ const getMongoURI = () => {
     VERCEL: process.env.VERCEL ? 'YES' : 'NO'
   });
   
-  if (process.env.MONGO_URI) {
-    return process.env.MONGO_URI;
-  }
+  // if (process.env.MONGO_URI) {
+  //   return process.env.MONGO_URI;
+  // }
   
   return "mongodb+srv://trip:ooKoVQhrUlYfmyg9@cluster0.qowhuke.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 };
