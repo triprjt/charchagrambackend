@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 
 // Comprehensive constituency data for Indian constituencies
+//insert your 
 export const constituencyData = [
   {
     area_name: "Raghopur Vidhan Sabha Kshetra",
@@ -505,98 +506,6 @@ export const constituencyData = [
       }
     ]
   },
-  {
-    area_name: "Gaya",
-    vidhayak_info: {
-      name: "प्रेम कुमार",
-      image_url: "https://blog-meme.blr1.digitaloceanspaces.com/charchamanchimage1.png",
-      age: 55,
-      last_election_vote_percentage: "47.3%",
-      experience: 20,
-      party_name: "JDU",
-      party_icon_url: "https://blog-meme.blr1.digitaloceanspaces.com/charchamanchpartyimage2.png",
-      manifesto_link: "https://example.com/prem_manifesto.pdf",
-      manifesto_score: 50,
-      metadata: {
-        education: "पीएचडी",
-        net_worth: "₹4.2 करोड़",
-        criminal_cases: 1,
-        attendance: "93%",
-        questions_asked: 128,
-        funds_utilisation: "85%"
-      },
-      survey_score: [
-        {
-          question: "क्या आप पिछले पांच साल के कार्यकाल से खुश हैं?",
-          yes_votes: 500,
-          no_votes: 500,
-          score: 50
-        }
-      ]
-    },
-    dept_info: [
-      {
-        id: uuidv4(),
-        dept_name: "धार्मिक पर्यटन",
-        work_info: [
-          "बौद्ध सर्किट विकास",
-          "मंदिरों का जीर्णोद्धार",
-          "तीर्थयात्रा सुविधाएं",
-          "सांस्कृतिक कार्यक्रम"
-        ],
-        survey_score: [
-          {
-            question: "धार्मिक पर्यटन के क्षेत्र में सरकार के कार्य से आप कितने संतुष्ट हैं?",
-            ratings: { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0 },
-            score: 50
-          }
-        ],
-        average_score: 50
-      },
-      {
-        id: uuidv4(),
-        dept_name: "कुटीर उद्योग",
-        work_info: [
-          "हथकरघा केंद्र",
-          "कला प्रशिक्षण कार्यक्रम",
-          "बाजार लिंकेज",
-          "छोटे उद्योगों को प्रोत्साहन"
-        ],
-        survey_score: [
-          {
-            question: "कुटीर उद्योग के क्षेत्र में सरकार के प्रयासों से आप कितने संतुष्ट हैं?",
-            ratings: { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0 },
-            score: 50
-          }
-        ],
-        average_score: 50
-      }
-    ],
-    other_candidates: [
-      {
-        id: 1,
-        candidate_name: "राजेश कुमार",
-        candidate_image_url: "https://blog-meme.blr1.digitaloceanspaces.com/charchamanchimage2.png",
-        candidate_party: "BJP",
-        vote_share: "41.9%"
-      },
-      {
-        id: 2,
-        candidate_name: "मोहम्मद शफीक",
-        candidate_image_url: "https://blog-meme.blr1.digitaloceanspaces.com/charchamanchimage2.png",
-        candidate_party: "RJD",
-        vote_share: "10.8%"
-      }
-    ],
-    latest_news: [
-      {
-        title: "गया में बौद्ध सर्किट का विकास"
-      },
-      {
-        title: "प्रेम कुमार ने कुटीर उद्योग केंद्र का उद्घाटन किया"
-      }
-    ]
-  }
 ];
 
 // Function to generate UUIDs for dept_info
