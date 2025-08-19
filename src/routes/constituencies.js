@@ -2,8 +2,14 @@ import express from 'express';
 import { body, param, validationResult } from 'express-validator';
 import Constituency from '../models/constituency.js';
 import { getConstituencyByAreaName, getAllConstituencyNames } from '../utils/constituencyData.js';
+import { constituencyArraySchema, constituencySchema } from '../schema/schema.js';
+import { v4 as uuidv4 } from 'uuid';
+import { authenticateAdmin } from '../middleware/adminAuth.js';
 
 const router = express.Router();
+
+// Apply middleware to all admin routes
+router.use('/admin', authenticateAdmin);
 
 // Validation middleware
 const validateAreaName = [
@@ -229,7 +235,7 @@ router.get('/list/paginated', async (req, res) => {
     // Get pagination parameters from query
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 2;
-    
+
     // Validate pagination parameters
     if (page < 1) {
       return res.status(400).json({
@@ -237,7 +243,7 @@ router.get('/list/paginated', async (req, res) => {
         message: 'Page number must be greater than 0'
       });
     }
-    
+
     if (limit < 1 || limit > 10) {
       return res.status(400).json({
         error: 'Invalid limit',
@@ -250,7 +256,7 @@ router.get('/list/paginated', async (req, res) => {
 
     // Get total count of constituencies
     const totalConstituencies = await Constituency.countDocuments({});
-    
+
     // If no constituencies found, return empty result
     if (totalConstituencies === 0) {
       return res.status(200).json({
@@ -306,7 +312,7 @@ router.get('/list/paginated', async (req, res) => {
     };
 
     res.status(200).json(response);
-    
+
   } catch (error) {
     console.error('Error fetching all constituencies:', error);
     res.status(500).json({
@@ -388,14 +394,14 @@ router.post('/poll/:area_name', async (req, res) => {
     const { poll_response, poll_category, question_id, dept_id } = req.body;
     console.log("poll_response", poll_response, "poll_category", poll_category, "question_id", question_id, "dept_id", dept_id);
 
-    
-    
+
+
 
     // Find the constituency
     const constituency = await Constituency.findOne({ area_name: area_name });
 
     if (!constituency) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         error: 'Constituency not found',
         message: `No constituency found with area name: ${area_name}`
       });
@@ -424,7 +430,7 @@ router.post('/poll/:area_name', async (req, res) => {
         }
 
         const vidhayakQuestion = constituency.vidhayak_info.survey_score[questionIndex];
-        
+
         // Update votes
         if (poll_response === 'yes') {
           vidhayakQuestion.yes_votes += 1;
@@ -500,36 +506,36 @@ router.post('/poll/:area_name', async (req, res) => {
         // 2. calculate the average score of the department. store it in department.average_score
         // First, update the current question's score
         deptQuestion.score = Math.round(((weightedAverage - 1) / 4) * 100);
-        
+
         // Then calculate the overall department average from all its questions
         let deptTotalScore = 0;
         let questionCount = 0;
-        
+
         department.survey_score.forEach(question => {
           if (question.score > 0) {
             deptTotalScore += question.score;
             questionCount += 1;
           }
         });
-        
+
         // Store the department's overall average score
-        department.average_score = questionCount > 0 
+        department.average_score = questionCount > 0
           ? Math.round(deptTotalScore / questionCount)
           : 0;
 
         // 3. calculate the manifesto score of the constituency = average of all department average scores. store it in constituency.vidhayak_info.manifesto_score
         let totalDeptScores = 0;
         let deptCount = 0;
-        
+
         constituency.dept_info.forEach(dept => {
           if (dept.average_score > 0) {
             totalDeptScores += dept.average_score;
             deptCount += 1;
           }
         });
-        
+
         // Update constituency manifesto score
-        constituency.vidhayak_info.manifesto_score = deptCount > 0 
+        constituency.vidhayak_info.manifesto_score = deptCount > 0
           ? Math.round(totalDeptScores / deptCount)
           : 0;
 
@@ -646,6 +652,378 @@ router.get('/stats/overview', async (req, res) => {
   }
 });
 
+//these are admin APIs, so we need to add a middleware to check if the user is admin.
+//need a login API, with admin credentials, and a token will be returned, which will be used to authenticate the admin in the other APIs.
+//API to add a new constituency data to the DB
+//API to delete a constituency data from the DB
+//API to update a constituency data in the DB
+//API to clean the DB, and populate it with sample data of all constituencies at once.
+router.delete('/admin/constituencies/delete/:id', async (req, res) => {
+  try {
+    const constituencyId = req.params.id;
+
+    // Validate the ID format
+    if (!constituencyId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        error: 'Invalid ID format',
+        message: 'Constituency ID must be a valid MongoDB ObjectId'
+      });
+    }
+
+    // Check if constituency exists
+    const constituency = await Constituency.findById(constituencyId);
+    
+    if (!constituency) {
+      return res.status(404).json({ 
+        error: 'Constituency not found',
+        message: `No constituency found with ID: ${constituencyId}`
+      });
+    }
+
+    // Delete the constituency
+    await Constituency.findByIdAndDelete(constituencyId);
+    
+    console.log(`Successfully deleted constituency: ${constituency.area_name}`);
+
+    res.status(200).json({ 
+      message: 'Constituency deleted successfully',
+      deleted_constituency: {
+        id: constituencyId,
+        area_name: constituency.area_name
+      }
+    });
+  } catch (error) {
+    console.error('Error in delete operation:', error);
+    
+    let errorMessage = 'Failed to delete constituency';
+    let errorDetails = {};
+
+    if (error.name === 'CastError') {
+      errorMessage = 'Invalid constituency ID';
+      errorDetails = {
+        field: 'id',
+        message: 'The provided ID is not a valid MongoDB ObjectId'
+      };
+    }
+
+    res.status(500).json({ 
+      error: 'Internal server error', 
+      message: errorMessage,
+      details: errorDetails,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+router.put('/admin/constituencies/update/:id', async (req, res) => {
+  try {
+    const constituencyObject = req.body;
+    const constituencyId = req.params.id;
+
+    // Validate the input using Zod schema
+    const validationResult = constituencySchema.safeParse([constituencyObject]);
+
+    if (!validationResult.success) {
+      const errors = validationResult.error.errors.map(err => ({
+        field: err.path.join('.'),
+        message: err.message,
+        received: err.received
+      }));
+
+      return res.status(400).json({
+        error: 'Validation failed',
+        message: 'Input data does not match required schema',
+        details: errors
+      });
+    }
+
+    const validatedConstituency = validationResult.data[0];
+
+    // Check if constituency exists
+    const existingConstituency = await Constituency.findById(constituencyId);
+
+    if (!existingConstituency) {
+      return res.status(404).json({ 
+        error: 'Constituency not found',
+        message: `No constituency found with ID: ${constituencyId}`
+      });
+    }
+
+    // Check if area_name is being changed and if it conflicts with existing constituency
+    if (constituencyObject.area_name && 
+        constituencyObject.area_name !== existingConstituency.area_name) {
+      const conflictingConstituency = await Constituency.findOne({ 
+        area_name: constituencyObject.area_name 
+      });
+      
+      if (conflictingConstituency) {
+        return res.status(409).json({
+          error: 'Area name conflict',
+          message: `Constituency with area name '${constituencyObject.area_name}' already exists`
+        });
+      }
+    }
+
+    // Process department IDs to ensure they are unique UUIDs
+    if (constituencyObject.dept_info) {
+      constituencyObject.dept_info = constituencyObject.dept_info.map(dept => ({
+        ...dept,
+        id: dept.id || uuidv4()
+      }));
+    }
+
+    // Update the constituency with the new data
+    const updatedConstituency = await Constituency.findByIdAndUpdate(
+      constituencyId, 
+      constituencyObject, 
+      { 
+        new: true, 
+        runValidators: true,
+        maxTimeMS: 30000
+      }
+    );
+
+    console.log(`Successfully updated constituency: ${updatedConstituency.area_name}`);
+
+    res.status(200).json({ 
+      message: 'Constituency updated successfully', 
+      constituency: updatedConstituency 
+    });
+
+  } catch (error) {
+    console.error('Error in update operation:', error);
+    
+    let errorMessage = 'Failed to update constituency';
+    let errorDetails = {};
+
+    if (error.name === 'ValidationError') {
+      errorMessage = 'Data validation failed';
+      errorDetails = {
+        field: error.errors ? Object.keys(error.errors) : [],
+        message: error.message
+      };
+    } else if (error.name === 'MongoError' || error.code === 11000) {
+      errorMessage = 'Duplicate area name';
+      errorDetails = {
+        code: error.code,
+        message: 'Constituency with this area name already exists'
+      };
+    } else if (error.name === 'CastError') {
+      errorMessage = 'Invalid constituency ID';
+      errorDetails = {
+        field: 'id',
+        message: 'The provided ID is not a valid MongoDB ObjectId'
+      };
+    }
+
+    res.status(500).json({ 
+      error: 'Internal server error', 
+      message: errorMessage,
+      details: errorDetails,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+router.post('/admin/constituencies/add', async (req, res) => {
+  try {
+    const constituencyObject = req.body;
+
+    // Validate the input using Zod schema
+    const validationResult = constituencySchema.safeParse([constituencyObject]);
+
+    if (!validationResult.success) {
+      const errors = validationResult.error.errors.map(err => ({
+        field: err.path.join('.'),
+        message: err.message,
+        received: err.received
+      }));
+
+      return res.status(400).json({
+        error: 'Validation failed',
+        message: 'Input data does not match required schema',
+        details: errors
+      });
+    }
+
+    const validatedConstituency = validationResult.data[0];
+
+    // Check if constituency with same area_name already exists
+    const existingConstituency = await Constituency.findOne({ 
+      area_name: validatedConstituency.area_name 
+    });
+
+    if (existingConstituency) {
+      return res.status(409).json({
+        error: 'Constituency already exists',
+        message: `Constituency with area name '${validatedConstituency.area_name}' already exists`
+      });
+    }
+
+    // Process department IDs to ensure they are unique UUIDs
+    const processedConstituency = {
+      ...validatedConstituency,
+      dept_info: validatedConstituency.dept_info.map(dept => ({
+        ...dept,
+        id: dept.id || uuidv4()
+      }))
+    };
+
+    // Insert the new constituency
+    const newConstituency = new Constituency(processedConstituency);
+    const savedConstituency = await newConstituency.save();
+
+    console.log(`Successfully added new constituency: ${savedConstituency.area_name}`);
+
+    res.status(201).json({
+      message: 'Constituency added successfully',
+      constituency: {
+        id: savedConstituency._id,
+        area_name: savedConstituency.area_name,
+        vidhayak_info: savedConstituency.vidhayak_info,
+        dept_count: savedConstituency.dept_info.length,
+        other_candidates_count: savedConstituency.other_candidates.length,
+        latest_news_count: savedConstituency.latest_news.length
+      }
+    });
+
+  } catch (error) {
+    console.error('Error in add operation:', error);
+    
+    let errorMessage = 'Failed to add constituency';
+    let errorDetails = {};
+
+    if (error.name === 'ValidationError') {
+      errorMessage = 'Data validation failed';
+      errorDetails = {
+        field: error.errors ? Object.keys(error.errors) : [],
+        message: error.message
+      };
+    } else if (error.name === 'MongoError' || error.code === 11000) {
+      errorMessage = 'Duplicate constituency';
+      errorDetails = {
+        code: error.code,
+        message: 'Constituency with this area name already exists'
+      };
+    }
+
+    res.status(500).json({
+      error: 'Internal server error',
+      message: errorMessage,
+      details: errorDetails,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+router.post('/admin/constituencies/reset-populate', async (req, res) => {
+  try {
+    const constituencyArray = req.body;
+
+    // Validate the input array of constituencies
+    const validationResult = constituencyArraySchema.safeParse(constituencyArray);
+
+    if (!validationResult.success) {
+      const errors = validationResult.error.errors.map(err => ({
+        field: err.path.join('.'),
+        message: err.message,
+        received: err.received
+      }));
+
+      return res.status(400).json({
+        error: 'Validation failed',
+        message: 'Input data does not match required schema',
+        details: errors
+      });
+    }
+
+    const validatedConstituencies = validationResult.data;
+
+    console.log(`Starting database reset and populate with ${validatedConstituencies.length} constituencies...`);
+
+    // Step 1: Delete all existing constituencies
+    console.log('Deleting existing constituencies...');
+    const deleteResult = await Constituency.deleteMany({});
+    console.log(`Deleted ${deleteResult.deletedCount} existing constituencies`);
+
+    // Step 2: Populate with new constituency data
+    console.log('Populating database with new constituencies...');
+    
+    // Process each constituency to ensure proper UUIDs for departments
+    const processedConstituencies = validatedConstituencies.map(constituency => {
+      // Ensure each department has a unique UUID
+      const processedDeptInfo = constituency.dept_info.map(dept => ({
+        ...dept,
+        id: dept.id || uuidv4() // Use existing ID or generate new one
+      }));
+      
+      return {
+        ...constituency,
+        dept_info: processedDeptInfo
+      };
+    });
+
+    // Insert all constituencies
+    const insertResults = await Constituency.insertMany(processedConstituencies, {
+      maxTimeMS: 30000 // 30 second timeout
+    });
+
+    console.log(`Successfully inserted ${insertResults.length} constituencies`);
+
+    // Step 3: Verify the population
+    const totalCount = await Constituency.countDocuments();
+    console.log(`Total constituencies in database: ${totalCount}`);
+
+    // Step 4: Return success response
+    res.status(200).json({
+      message: `Successfully reset and populated the database with ${totalCount} constituencies`,
+      summary: {
+        total_constituencies: totalCount,
+        deleted_constituencies: deleteResult.deletedCount,
+        inserted_constituencies: insertResults.length,
+        constituencies: insertResults.map(c => ({
+          area_name: c.area_name,
+          vidhayak_info: c.vidhayak_info,
+          dept_info: c.dept_info,
+          other_candidates: c.other_candidates,
+          id: c._id
+        }))
+      }
+    });
+
+  } catch (error) {
+    console.error('Error in reset-populate operation:', error);
+
+    // Provide detailed error information
+    let errorMessage = 'Failed to reset and populate database';
+    let errorDetails = {};
+
+    if (error.name === 'ValidationError') {
+      errorMessage = 'Data validation failed';
+      errorDetails = {
+        field: error.errors ? Object.keys(error.errors) : [],
+        message: error.message
+      };
+    } else if (error.name === 'MongoError' || error.code === 11000) {
+      errorMessage = 'Database operation failed';
+      errorDetails = {
+        code: error.code,
+        message: error.message
+      };
+    } else if (error.name === 'TimeoutError') {
+      errorMessage = 'Database operation timed out';
+      errorDetails = {
+        operation: 'insertMany',
+        timeout: '30 seconds'
+      };
+    }
+
+    res.status(500).json({
+      error: 'Internal server error',
+      message: errorMessage,
+      details: errorDetails,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
 // 404 handler for undefined routes
 router.use('*', (req, res) => {
   res.status(404).json({

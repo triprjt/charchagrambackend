@@ -5,8 +5,8 @@
   "type": "module",
   "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
+    "start": "nodemon src/server.js",
+    "dev": "node src/server.js",
     "seed": "node src/scripts/seedDatabase.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
