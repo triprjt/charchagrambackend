@@ -1,5 +1,29 @@
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
+const isProduction = process.env.NODE_ENV === 'production';
+
+const servers = isProduction 
+  ? [
+      {
+        url: 'https://charchagrambackend.onrender.com',
+        description: 'Production server'
+      }
+    ]
+  : [
+      {
+        url: 'http://localhost:3002',
+        description: 'Development server'
+      },
+      {
+        url: 'https://charchagrambackend.onrender.com',
+        description: 'Production server'
+      }
+    ];
+
 
 const options = {
   definition: {
@@ -17,16 +41,7 @@ const options = {
         url: 'https://opensource.org/licenses/MIT'
       }
     },
-    servers: [
-      {
-        url: 'http://localhost:3002',
-        description: 'Development server'
-      },
-      {
-        url: 'https://charchagrambackend.onrender.com',
-        description: 'Production server'
-      }
-    ],
+    servers: servers,
     components: {
       schemas: {
         Constituency: {
