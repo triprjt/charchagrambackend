@@ -22,14 +22,6 @@ const getMongoURI = () => {
 
 const clientOptions = {
   serverApi: { version: '1', strict: true, deprecationErrors: true }, connectTimeoutMS: 5000,
-  connectTimeoutMS: 5000,
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 5000,
-  maxPoolSize: 1,
-  minPoolSizelegacyUnifiedTopology: true,
-  // Add more debugging
-  bufferCommands: false,
-  bufferMaxEntries: 0
 };
 
 async function connectDB() {

@@ -12,8 +12,8 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Remove the top-level await
-// await connectDB(); // ❌ This won't work
+// Connect to MongoDB Atlas
+connectDB();
 
 // Middleware
 app.use(helmet()); // Security headers
@@ -119,29 +119,13 @@ app.use('*', (req, res) => {
   });
 });
 
-// Create an async function to start the server
-const startServer = async () => {
-  try {
-    // Connect to MongoDB BEFORE starting the server
-    console.log('🔄 Connecting to MongoDB...');
-    await connectDB();
-    console.log('✅ MongoDB connected successfully');
-    
-    // Start server only after DB connection
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`🔗 Health check: http://localhost:${PORT}/health`);
-      console.log(`📚 API documentation: http://localhost:${PORT}/api-docs`);
-    });
-  } catch (error) {
-    console.error('❌ Failed to start server:', error);
-    process.exit(1);
-  }
-};
-
-// Start the server
-startServer();
+// Start server
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+  console.log(`📚 API documentation: http://localhost:${PORT}/api-docs`);
+});
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
