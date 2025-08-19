@@ -52,6 +52,15 @@ app.get('/', (req, res) => {
       constituencies: '/api/constituencies',
       constituency_details: '/api/constituencies/:area_name',
       constituency_stats: '/api/constituencies/stats/overview',
+      paginated_constituencies: "/api/constituencies/list/paginated",
+
+      submit_poll: "/api/constituencies/poll/:area_name",
+
+      // Admin APIs
+      admin_add_constituency: "/api/constituencies/admin/constituencies/add",
+      admin_update_constituency: "/api/constituencies/admin/constituencies/update/:id",
+      admin_delete_constituency: "/api/constituencies/admin/constituencies/delete/:id",
+      admin_reset_populate: "/api/constituencies/admin/constituencies/reset-populate",
       api_docs: '/api-docs'
     },
     documentation: 'API provides endpoints to retrieve constituency information, representative details, departments, and other candidates. Visit /api-docs for interactive API documentation.'
