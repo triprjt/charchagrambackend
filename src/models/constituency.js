@@ -56,14 +56,7 @@ const deptSurveyScoreSchema = new mongoose.Schema({
 const deptInfoSchema = new mongoose.Schema({
   id: {
     type: String,
-    required: true,
-    validate: {
-      validator: function(v) {
-        // UUID validation will be handled at the application level
-        return true;
-      },
-      message: props => `${props.value} is not a valid UUID!`
-    }
+    required: true,  
   },
   dept_name: {
     type: String,
@@ -117,9 +110,11 @@ const otherCandidatesSchema = new mongoose.Schema({
   },
   vote_share: {
     type: String,
-    required: true,
-    match: /^\d+(\.\d+)?%$/, // Format: "35.6%"
-    message: 'Vote share must be in percentage format (e.g., "35.6%")'
+    required: true    
+  },
+  candidate_party_icon_url: {
+    type: String,
+    required: false,
   }
 }, { _id: false });
 

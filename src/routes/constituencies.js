@@ -1026,16 +1026,16 @@ router.put('/admin/constituencies/update/:id', async (req, res) => {
     const validationResult = constituencySchema.safeParse(constituencyObject);
 
     if (!validationResult.success) {
-      const errors = validationResult.error.map(err => ({
-        field: err.path.join('.'),
-        message: err.message,
-        received: err.received
-      }));
+      // const errors = validationResult.error.map(err => ({
+      //   field: err.path.join('.'),
+      //   message: err.message,
+      //   received: err.received
+      // }));
 
       return res.status(400).json({
         error: 'Validation failed',
         message: 'Input data does not match required schema',
-        details: errors
+        details: validationResult.error
       });
     }
 
@@ -1238,16 +1238,16 @@ router.post('/admin/constituencies/add', async (req, res) => {
     const validationResult = constituencySchema.safeParse(constituencyObject);
     console.log("validationResult ", validationResult)
     if (!validationResult.success) {
-      const errors = validationResult.error.map(err => ({
-        field: err.path.join('.'),
-        message: err.message,
-        received: err.received
-      }));
+      // const errors = validationResult.error.map(err => ({
+      //   field: err.path.join('.'),
+      //   message: err.message,
+      //   received: err.received
+      // }));
 
       return res.status(400).json({
         error: 'Validation failed',
         message: 'Input data does not match required schema',
-        details: errors
+        details: validationResult.error
       });
     }
 
@@ -1445,20 +1445,20 @@ router.post('/admin/constituencies/reset-populate', async (req, res) => {
     // console.log("validationResult ", validationResult)
     if (!validationResult.success) {
       console.log("validationResult ", validationResult)
-      const errors = validationResult.error.map(err => ({
-        field: err.path.join('.'),
-        message: err.message,
-        received: err.received
-      }));
+      // const errors = validationResult.error.map(err => ({
+      //   field: err.path.join('.'),
+      //   message: err.message,
+      //   received: err.received
+      // }));
 
       return res.status(400).json({
-        error: 'Validation failed',
+        error: `Validation failed with error:`,
         message: 'Input data does not match required schema',
-        details: errors
+        details: validationResult.error
       });
     }
 
-    const validatedConstituencies = validationResult.data;
+    // const validatedConstituencies = validationResult.data;
 
     // console.log(`Starting database reset and populate with ${validatedConstituencies.length} constituencies...`);
 
@@ -1471,7 +1471,7 @@ router.post('/admin/constituencies/reset-populate', async (req, res) => {
     console.log('Populating database with new constituencies...');
 
     // Process each constituency to ensure proper UUIDs for departments
-    const processedConstituencies = validatedConstituencies.map(constituency => {
+    const processedConstituencies = constituencyArray.map(constituency => {
       // Ensure each department has a unique UUID
       const processedDeptInfo = constituency.dept_info.map(dept => ({
         ...dept,

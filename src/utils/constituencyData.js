@@ -112,6 +112,7 @@ export const constituencyData = [
         candidate_name: "राहुल शर्मा",
         candidate_image_url: "https://blog-meme.blr1.digitaloceanspaces.com/charchamanchimage2.png",
         candidate_party: "Congress",
+        candidate_party_icon_url: "https://blog-meme.blr1.digitaloceanspaces.com/charchamanchpartyimage1.png",
         vote_share: "18.2%"
       },
       {
@@ -119,6 +120,7 @@ export const constituencyData = [
         candidate_name: "उत्कर्ष सिंह",
         candidate_image_url: "https://blog-meme.blr1.digitaloceanspaces.com/charchamanchimage2.png",
         candidate_party: "BJP",
+        candidate_party_icon_url: "https://blog-meme.blr1.digitaloceanspaces.com/charchamanchpartyimage1.png",
         vote_share: "18.2%"
       },
       {
@@ -126,6 +128,7 @@ export const constituencyData = [
         candidate_name: "प्रमोद कुमार",
         candidate_image_url: "https://blog-meme.blr1.digitaloceanspaces.com/charchamanchimage2.png",
         candidate_party: "JDU",
+        candidate_party_icon_url: "https://blog-meme.blr1.digitaloceanspaces.com/charchamanchpartyimage1.png",
         vote_share: "11.3%"
       }
     ],
@@ -211,6 +214,7 @@ export const constituencyData = [
         candidate_name: "अनिल कुमार",
         candidate_image_url: "https://blog-meme.blr1.digitaloceanspaces.com/charchamanchimage2.png",
         candidate_party: "Congress",
+        candidate_party_icon_url: "https://blog-meme.blr1.digitaloceanspaces.com/charchamanchpartyimage1.png",
         vote_share: "35.4%"
       },
       {
@@ -218,6 +222,7 @@ export const constituencyData = [
         candidate_name: "सुनील कुमार",
         candidate_image_url: "https://blog-meme.blr1.digitaloceanspaces.com/charchamanchimage2.png",
         candidate_party: "RJD",
+        candidate_party_icon_url: "https://blog-meme.blr1.digitaloceanspaces.com/charchamanchpartyimage1.png",
         vote_share: "15.9%"
       }
     ],
@@ -303,6 +308,7 @@ export const constituencyData = [
         candidate_name: "वीरेंद्र कुमार",
         candidate_image_url: "https://blog-meme.blr1.digitaloceanspaces.com/charchamanchimage2.png",
         candidate_party: "BJP",
+        candidate_party_icon_url: "https://blog-meme.blr1.digitaloceanspaces.com/charchamanchpartyimage1.png",
         vote_share: "38.9%"
       },
       {
@@ -310,6 +316,7 @@ export const constituencyData = [
         candidate_name: "राजेश कुमार",
         candidate_image_url: "https://blog-meme.blr1.digitaloceanspaces.com/charchamanchimage2.png",
         candidate_party: "Congress",
+        candidate_party_icon_url: "https://blog-meme.blr1.digitaloceanspaces.com/charchamanchpartyimage1.png",
         vote_share: "15.3%"
       }
     ],
@@ -395,6 +402,7 @@ export const constituencyData = [
         candidate_name: "राजेश कुमार",
         candidate_image_url: "https://blog-meme.blr1.digitaloceanspaces.com/charchamanchimage2.png",
         candidate_party: "BJP",
+        candidate_party_icon_url: "https://blog-meme.blr1.digitaloceanspaces.com/charchamanchpartyimage1.png",
         vote_share: "42.1%"
       },
       {
@@ -402,6 +410,7 @@ export const constituencyData = [
         candidate_name: "मोहम्मद शफीक",
         candidate_image_url: "https://blog-meme.blr1.digitaloceanspaces.com/charchamanchimage2.png",
         candidate_party: "RJD",
+        candidate_party_icon_url: "https://blog-meme.blr1.digitaloceanspaces.com/charchamanchpartyimage1.png",
         vote_share: "16.7%"
       }
     ],
@@ -487,6 +496,7 @@ export const constituencyData = [
         candidate_name: "राजेश रंजन",
         candidate_image_url: "https://blog-meme.blr1.digitaloceanspaces.com/charchamanchimage1.png",
         candidate_party: "RJD",
+        candidate_party_icon_url: "https://blog-meme.blr1.digitaloceanspaces.com/charchamanchpartyimage1.png",
         vote_share: "39.8%"
       },
       {
@@ -494,6 +504,7 @@ export const constituencyData = [
         candidate_name: "अमित कुमार",
         candidate_image_url: "https://blog-meme.blr1.digitaloceanspaces.com/charchamanchimage2.png",
         candidate_party: "Congress",
+        candidate_party_icon_url: "https://blog-meme.blr1.digitaloceanspaces.com/charchamanchpartyimage1.png",
         vote_share: "15.7%"
       }
     ],
