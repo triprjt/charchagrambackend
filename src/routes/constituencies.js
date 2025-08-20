@@ -1236,6 +1236,7 @@ router.post('/admin/constituencies/add', async (req, res) => {
 
     // Validate the input using Zod schema
     const validationResult = constituencySchema.safeParse(constituencyObject);
+    console.log("validationResult ", validationResult)
     if (!validationResult.success) {
       const errors = validationResult.error.map(err => ({
         field: err.path.join('.'),
@@ -1316,7 +1317,7 @@ router.post('/admin/constituencies/add', async (req, res) => {
     }
 
     res.status(500).json({
-      error: 'Internal server error',
+      error: `Internal server error ${error}`,
       message: errorMessage,
       details: errorDetails,
       timestamp: new Date().toISOString()

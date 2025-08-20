@@ -35,9 +35,7 @@ const vidhayakInfoSchema = z.object({
   age: z.number().min(18).max(100, "Age must be between 18 and 100"),
   last_election_vote_percentage: z.string().regex(/^\d+(\.\d+)?%$/, "Vote percentage must be in percentage format (e.g., '52.3%')"),
   experience: z.number().min(0).max(50, "Experience must be between 0 and 50 years"),
-  party_name: z.enum(['BJP', 'Congress', 'AAP', 'Shiv Sena', 'NCP', 'MNS', 'Samajwadi Party', 'BSP', 'TMC', 'DMK', 'AIADMK', 'RJD', 'JDU'], {
-    errorMap: () => ({ message: "Party name must be one of the valid parties" })
-  }),
+  party_name: z.string().min(1, "Party name is required"),
   party_icon_url: z.string().url("Party icon URL must be a valid URL"),
   manifesto_link: z.string().url("Manifesto link must be a valid URL"),
   manifesto_score: z.number().min(0).max(100, "Manifesto score must be between 0 and 100"),
@@ -57,9 +55,7 @@ const otherCandidatesSchema = z.object({
   id: z.number().optional(),
   candidate_name: z.string().min(1, "Candidate name is required"),
   candidate_image_url: z.string().url("Candidate image URL must be a valid URL"),
-  candidate_party: z.enum(['BJP', 'Congress', 'AAP', 'Shiv Sena', 'NCP', 'MNS', 'Samajwadi Party', 'BSP', 'TMC', 'DMK', 'AIADMK', 'RJD', 'JDU'], {
-    errorMap: () => ({ message: "Candidate party must be one of the valid parties" })
-  }),
+  candidate_party: z.string().min(1, "Candidate party is required"),
   vote_share: z.string().regex(/^\d+(\.\d+)?%$/, "Vote share must be in percentage format (e.g., '18.2%')")
 });
 
