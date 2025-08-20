@@ -89,13 +89,13 @@ const otherCandidatesSchema = new mongoose.Schema({
   id: {
     type: String,
     required: true,
-    validate: {
-      validator: function(v) {
-        // UUID validation will be handled at the application level
-        return true;
-      },
-      message: props => `${props.value} is not a valid UUID!`
-    }
+    // validate: {
+    //   validator: function(v) {
+    //     // UUID validation will be handled at the application level
+    //     return true;
+    //   },
+    //   message: props => `${props.value} is not a valid UUID!`
+    // }
   },
   candidate_name: {
     type: String,
@@ -106,14 +106,14 @@ const otherCandidatesSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true,
-    match: /^https?:\/\/.+/, // Must be a valid URL
-    message: 'Candidate image URL must be a valid HTTP/HTTPS URL'
+    // match: /^https?:\/\/.+/, // Must be a valid URL
+    // message: 'Candidate image URL must be a valid HTTP/HTTPS URL'
   },
   candidate_party: {
     type: String,
     required: true,
-    enum: VALID_PARTIES,
-    message: props => `${props.value} is not a valid party name!`
+    // enum: VALID_PARTIES,
+    // message: props => `${props.value} is not a valid party name!`
   },
   vote_share: {
     type: String,
@@ -150,8 +150,8 @@ const constituencySchema = new mongoose.Schema({
       type: String,
       required: true,
       trim: true,
-      match: /^https?:\/\/.+/, // Must be a valid URL
-      message: 'Image URL must be a valid HTTP/HTTPS URL'
+      // match: /^https?:\/\/.+/, // Must be a valid URL
+      // message: 'Image URL must be a valid HTTP/HTTPS URL'
     },
     age: {
       type: Number,
@@ -162,40 +162,40 @@ const constituencySchema = new mongoose.Schema({
     last_election_vote_percentage: {
       type: String,
       required: true,
-      match: /^\d+(\.\d+)?%$/, // Format: "52.3%"
-      message: 'Vote percentage must be in percentage format (e.g., "52.3%")'
+      // match: /^\d+(\.\d+)?%$/, // Format: "52.3%"
+      // message: 'Vote percentage must be in percentage format (e.g., "52.3%")'
     },
     experience: {
       type: Number,
       required: true,
-      min: 0,
-      max: 50
+      // min: 0,
+      // max: 50
     },
     party_name: {
       type: String,
       required: true,
-      enum: VALID_PARTIES,
-      message: props => `${props.value} is not a valid party name!`
+      // enum: VALID_PARTIES,
+      // message: props => `${props.value} is not a valid party name!`
     },
     party_icon_url: {
       type: String,
       required: true,
       trim: true,
-      match: /^https?:\/\/.+/, // Must be a valid URL
-      message: 'Party icon URL must be a valid HTTP/HTTPS URL'
+      // match: /^https?:\/\/.+/, // Must be a valid URL
+      // message: 'Party icon URL must be a valid HTTP/HTTPS URL'
     },
     manifesto_link: {
       type: String,
       required: true,
       trim: true,
-      match: /^https?:\/\/.+/, // Must be a valid URL
-      message: 'Manifesto link must be a valid HTTP/HTTPS URL'
+      // match: /^https?:\/\/.+/, // Must be a valid URL
+      // message: 'Manifesto link must be a valid HTTP/HTTPS URL'
     },
     manifesto_score: {
       type: Number,
       required: true,
-      min: 0,
-      max: 100
+      // min: 0,
+      // max: 100
     },
     metadata: {
       education: {
@@ -216,8 +216,8 @@ const constituencySchema = new mongoose.Schema({
       attendance: {
         type: String,
         required: true,
-        match: /^\d+(\.\d+)?%$/, // Format: "85%"
-        message: 'Attendance must be in percentage format (e.g., "85%")'
+        // match: /^\d+(\.\d+)?%$/, // Format: "85%"
+        // message: 'Attendance must be in percentage format (e.g., "85%")'
       },
       questions_asked: {
         type: Number,
@@ -227,8 +227,8 @@ const constituencySchema = new mongoose.Schema({
       funds_utilisation: {
         type: String,
         required: true,
-        match: /^\d+(\.\d+)?%$/, // Format: "90%"
-        message: 'Funds utilisation must be in percentage format (e.g., "90%")'
+        // match: /^\d+(\.\d+)?%$/, // Format: "90%"
+        // message: 'Funds utilisation must be in percentage format (e.g., "90%")'
       }
     },
     survey_score: [surveyScoreSchema]

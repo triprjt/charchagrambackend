@@ -166,6 +166,116 @@ router.get('/:area_name', validateAreaName, handleValidationErrors, async (req, 
 
 /**
  * @swagger
+ * /api/constituencies/id/{id}:
+ *   get:
+ *     summary: Get constituency by ID
+ *     description: Retrieve detailed information about a specific constituency using its MongoDB ObjectId
+ *     tags: [Constituencies]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *         description: MongoDB ObjectId of the constituency
+ *         example: "68a44a6c83ff6cc40618822b"
+ *     responses:
+ *       200:
+ *         description: Constituency found successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                   description: MongoDB ObjectId of the constituency
+ *                   example: "68a44a6c83ff6cc40618822b"
+ *                 area_name:
+ *                   type: string
+ *                   description: Name of the constituency area
+ *                   example: "Raghopur Vidhan Sabha Kshetra"
+ *                 vidhayak_info:
+ *                   $ref: '#/components/schemas/VidhayakInfo'
+ *                 dept_info:
+ *                   type: array
+ *                   description: Array of department information
+ *                   items:
+ *                     $ref: '#/components/schemas/DeptInfo'
+ *                 other_candidates:
+ *                   type: array
+ *                   description: Array of other candidates in the constituency
+ *                   items:
+ *                     $ref: '#/components/schemas/OtherCandidate'
+ *                 latest_news:
+ *                   type: array
+ *                   description: Array of latest news items
+ *                   items:
+ *                     $ref: '#/components/schemas/LatestNews'
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
+ *                   description: Timestamp when the constituency was created
+ *                   example: "2025-08-19T10:00:00.000Z"
+ *                 updatedAt:
+ *                   type: string
+ *                   format: date-time
+ *                   description: Timestamp when the constituency was last updated
+ *                   example: "2025-08-19T10:00:00.000Z"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *     examples:
+ *       success:
+ *         summary: Successful response
+ *         value:
+ *           _id: "68a44a6c83ff6cc40618822b"
+ *           area_name: "Raghopur Vidhan Sabha Kshetra"
+ *           vidhayak_info:
+ *             name: "तेजस्वी यादव"
+ *             age: 58
+ *             party_name: "RJD"
+ *           dept_info:
+ *             - id: "dept-001"
+ *               dept_name: "स्वास्थ्य"
+ *           other_candidates:
+ *             - id: 1
+ *               candidate_name: "राहुल शर्मा"
+ *               candidate_party: "Congress"
+ *           latest_news:
+ *             - title: "तेजस्वी यादव ने स्वास्थ्य केंद्र का उद्घाटन किया"
+ *           createdAt: "2025-08-19T10:00:00.000Z"
+ *           updatedAt: "2025-08-19T10:00:00.000Z"
+ */
+router.get('/id/:id', async (req, res) => {
+  try {
+    const constituencyId = req.params.id;
+    const constituency = await Constituency.findById(constituencyId);
+    res.status(200).json({
+      _id: constituency._id,
+      area_name: constituency.area_name,
+      vidhayak_info: constituency.vidhayak_info,
+      dept_info: constituency.dept_info,
+      other_candidates: constituency.other_candidates,
+      latest_news: constituency.latest_news,
+      createdAt: constituency.createdAt,
+      updatedAt: constituency.updatedAt
+    });
+  }
+  catch (error) {
+    console.error('Error fetching constituency:', error);
+    res.status(500).json({
+      error: `Internal server error ${error}`,
+      message: 'Failed to fetch constituency details'
+    });
+  }
+})
+/**
+ * @swagger
  * /api/constituencies/list/paginated:
  *   get:
  *     summary: Get all constituencies with pagination
@@ -1320,6 +1430,13 @@ router.post('/admin/constituencies/reset-populate', async (req, res) => {
 
     // Check if the request is raw JavaScript object syntax
     let constituencyArray = constituencyArrayJavascriptObject
+    if(!Array.isArray(constituencyArrayJavascriptObject)){
+      return res.status(400).json({
+        error: 'Validation failed',
+        message: 'The JSON input must be an array of constituencies',
+        details: []
+      });
+    }
     console.log('constituencyArray ', constituencyArray)
     // Validate the input array of constituencies
     const validationResult = constituencyArraySchema.safeParse(constituencyArray);

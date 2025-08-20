@@ -50,7 +50,8 @@ app.get('/', (req, res) => {
     endpoints: {
       health: '/health',
       constituencies: '/api/constituencies',
-      constituency_details: '/api/constituencies/:area_name',
+      constituency_details_area_name: '/api/constituencies/:area_name',
+      constituency_details_id: '/api/constituencies/id/:id',
       constituency_stats: '/api/constituencies/stats/overview',
       paginated_constituencies: "/api/constituencies/list/paginated",
 
