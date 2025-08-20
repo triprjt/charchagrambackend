@@ -146,6 +146,7 @@ router.get('/:area_name', validateAreaName, handleValidationErrors, async (req, 
         requested_area: decodedAreaName
       });
     }
+    console.log('constituency.vidhayak_info ', constituency.vidhayak_info)
 
     res.status(200).json({
       area_name: constituency.area_name,
@@ -1438,7 +1439,7 @@ router.post('/admin/constituencies/reset-populate', async (req, res) => {
         details: []
       });
     }
-    console.log('constituencyArray ', constituencyArray)
+    // console.log('constituencyArray ', constituencyArray)
     // Validate the input array of constituencies
     const validationResult = constituencyArraySchema.safeParse(constituencyArray);
 
@@ -1493,7 +1494,7 @@ router.post('/admin/constituencies/reset-populate', async (req, res) => {
       maxTimeMS: 30000 // 30 second timeout
     });
 
-    console.log(`Successfully inserted ${insertResults.length} constituencies`);
+    // console.log(`Successfully inserted ${insertResults.length} constituencies`);
 
     // Step 3: Verify the population
     const totalCount = await Constituency.countDocuments();

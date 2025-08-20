@@ -21,20 +21,20 @@ const deptSurveyScoreSchema = z.object({
 });
 
 const metadataSchema = z.object({
-  education: z.string().nullable(),
-  net_worth: z.string().nullable(),
-  criminal_cases: z.number().min(0, "Criminal cases must be non-negative"),
-  attendance: z.string().nullable(),
-  questions_asked: z.number().min(0, "Questions asked must be non-negative"),
-  funds_utilisation: z.string().nullable()
+  education: z.union([z.string(), z.number()]).nullable(),
+  net_worth: z.union([z.string(), z.number()]).nullable(),
+  criminal_cases: z.union([z.string(), z.number()]).nullable().optional(),
+  attendance: z.union([z.string(), z.number()]).nullable(),
+  questions_asked: z.union([z.string(), z.number()]),
+  funds_utilisation: z.union([z.string(), z.number()]).nullable()
 });
 
 const vidhayakInfoSchema = z.object({
   name: z.string().min(1, "Vidhayak name is required"),
-  image_url: z.string().url("Image URL must be a valid URL"),
-  age: z.number().min(18).max(100, "Age must be between 18 and 100"),
-  last_election_vote_percentage: z.string(),
-  experience: z.number().min(0).max(50, "Experience must be between 0 and 50 years"),
+  image_url: z.string(),
+  age: z.union([z.string(), z.number()]).nullable(),
+  last_election_vote_percentage: z.union([z.string(), z.number()]).nullable().optional(),
+  experience: z.union([z.string(), z.number()]).nullable().optional(),
   party_name: z.string().min(1, "Party name is required"),
   party_icon_url: z.string(),
   manifesto_link: z.string().nullable(),
@@ -46,22 +46,22 @@ const vidhayakInfoSchema = z.object({
 const deptInfoSchema = z.object({
   id: z.string().optional(),
   dept_name: z.string().min(1, "Department name is required"),
-  work_info: z.array(z.string()),
+  work_info: z.string().nullable(),
   survey_score: z.array(deptSurveyScoreSchema),
   average_score: z.number().min(0).max(100, "Average score must be between 0 and 100")
 });
 
 const otherCandidatesSchema = z.object({
   id: z.number().optional(),
-  candidate_name: z.string().min(1, "Candidate name is required"),
-  candidate_image_url: z.string().url("Candidate image URL must be a valid URL"),
-  candidate_party: z.string().min(1, "Candidate party is required"),
+  candidate_name: z.string().min(1, "Candidate name is required").nullable(),
+  candidate_image_url: z.string().nullable(),
+  candidate_party: z.string().min(1, "Candidate party is required").nullable(),
   candidate_party_icon_url: z.string().optional(),
-  vote_share: z.string().nullable()
+  vote_share: z.union([z.string(), z.number()]).nullable().optional()
 });
 
 const latestNewsSchema = z.object({
-  title: z.string()
+  title: z.string().nullable().optional()
 });
 
 // Main constituency schema
@@ -69,7 +69,7 @@ const constituencySchema = z.object({
   area_name: z.string().min(1, "Area name is required"),
   vidhayak_info: vidhayakInfoSchema,
   dept_info: z.array(deptInfoSchema).min(1, "At least one department is required"),
-  other_candidates: z.array(otherCandidatesSchema).min(1, "At least one other candidate is required"),
+  other_candidates: z.array(otherCandidatesSchema),
   latest_news: z.array(latestNewsSchema)
 });
 

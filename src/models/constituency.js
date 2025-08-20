@@ -92,25 +92,25 @@ const otherCandidatesSchema = new mongoose.Schema({
   },
   candidate_name: {
     type: String,
-    required: true,
+    required: false,
     trim: true
   },
   candidate_image_url: {
     type: String,
-    required: true,
+    required: false,
     trim: true,
     // match: /^https?:\/\/.+/, // Must be a valid URL
     // message: 'Candidate image URL must be a valid HTTP/HTTPS URL'
   },
   candidate_party: {
     type: String,
-    required: true,
+    required: false,
     // enum: VALID_PARTIES,
     // message: props => `${props.value} is not a valid party name!`
   },
   vote_share: {
     type: String,
-    required: true    
+    required: false    
   },
   candidate_party_icon_url: {
     type: String,
@@ -122,7 +122,7 @@ const otherCandidatesSchema = new mongoose.Schema({
 const latestNewsSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: true,
+    required: false,
     trim: true
   }
 }, { _id: false });
@@ -138,92 +138,70 @@ const constituencySchema = new mongoose.Schema({
   vidhayak_info: {
     name: {
       type: String,
-      required: true,
+      required: false,
       trim: true
     },
     image_url: {
       type: String,
-      required: true,
-      trim: true,
-      // match: /^https?:\/\/.+/, // Must be a valid URL
-      // message: 'Image URL must be a valid HTTP/HTTPS URL'
+      required: false,
+      trim: true
     },
     age: {
-      type: Number,
-      required: true,
-      min: 18,
-      max: 100
+      type: String, // Changed from Number to String to accept "--"
+      required: false,
+      trim: true
     },
     last_election_vote_percentage: {
       type: String,
-      required: true,
-      // match: /^\d+(\.\d+)?%$/, // Format: "52.3%"
-      // message: 'Vote percentage must be in percentage format (e.g., "52.3%")'
+      required: false
     },
     experience: {
-      type: Number,
-      required: true,
-      // min: 0,
-      // max: 50
+      type: String, // Changed from Number to String to accept "--"
+      required: false
     },
     party_name: {
       type: String,
-      required: true,
-      // enum: VALID_PARTIES,
-      // message: props => `${props.value} is not a valid party name!`
+      required: false
     },
     party_icon_url: {
       type: String,
-      required: true,
-      trim: true,
-      // match: /^https?:\/\/.+/, // Must be a valid URL
-      // message: 'Party icon URL must be a valid HTTP/HTTPS URL'
+      required: false,
+      trim: true
     },
     manifesto_link: {
       type: String,
-      required: true,
-      trim: true,
-      // match: /^https?:\/\/.+/, // Must be a valid URL
-      // message: 'Manifesto link must be a valid HTTP/HTTPS URL'
+      required: false // Changed from true to false
     },
     manifesto_score: {
       type: Number,
-      required: true,
-      // min: 0,
-      // max: 100
+      required: false
     },
     metadata: {
       education: {
         type: String,
-        required: true,
+        required: false,
         trim: true
       },
       net_worth: {
         type: String,
-        required: true,
+        required: false,
         trim: true
       },
       criminal_cases: {
-        type: Number,
-        required: true,
-        min: 0
+        type: String, // Changed from Number to String to accept "--"
+        required: false
       },
       attendance: {
         type: String,
-        required: true,
-        // match: /^\d+(\.\d+)?%$/, // Format: "85%"
-        // message: 'Attendance must be in percentage format (e.g., "85%")'
+        required: false
       },
       questions_asked: {
-        type: Number,
-        required: true,
-        min: 0
+        type: String, // Changed from Number to String to accept "--"
+        required: false
       },
       funds_utilisation: {
         type: String,
-        required: true,
-        // match: /^\d+(\.\d+)?%$/, // Format: "90%"
-        // message: 'Funds utilisation must be in percentage format (e.g., "90%")'
+        required: false
       }
     },
     survey_score: [surveyScoreSchema]
@@ -232,7 +210,7 @@ const constituencySchema = new mongoose.Schema({
   other_candidates: [otherCandidatesSchema],
   latest_news: [latestNewsSchema]
 }, {
-  timestamps: true, // Adds createdAt and updatedAt fields
+  timestamps: true,
   collection: 'constituencies'
 });
 
