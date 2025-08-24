@@ -76,7 +76,6 @@ const deptInfoSchema = new mongoose.Schema({
   }
 }, { _id: false });
 
-
 // Other candidates schema
 const otherCandidatesSchema = new mongoose.Schema({
   id: {
@@ -132,7 +131,7 @@ const constituencySchema = new mongoose.Schema({
   area_name: {
     type: String,
     required: true,
-    unique: true,
+    // unique: true,
     trim: true
   },
   vidhayak_info: {

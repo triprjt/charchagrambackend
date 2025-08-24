@@ -5,7 +5,17 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import constituencyRoutes from './routes/constituencies.js';
+import userRoutes from './routes/user.js';
+import categoryRoutes from './routes/category.js';
+import postRoutes from './routes/post.js';
+import commentRoutes from './routes/comment.js';
 import { specs, swaggerUi } from './config/swagger.js';
+// import './models/constituency.js';
+// import './models/user.js';
+// import './models/post.js';
+// import './models/comment.js';
+// import './models/category.js';
+
 
 dotenv.config();
 
@@ -40,6 +50,10 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api/constituencies', constituencyRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/posts', postRoutes);
+app.use('/api/comments', commentRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
